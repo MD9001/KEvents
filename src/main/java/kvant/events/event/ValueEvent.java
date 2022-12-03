@@ -6,14 +6,20 @@ package kvant.events.event;
  */
 
 public abstract class ValueEvent<T> implements Event {
+    private final Class<T> clazz;
     private final String typeName;
 
     protected ValueEvent(Class<T> clazz) {
+        this.clazz = clazz;
         this.typeName = clazz.getTypeName();
     }
 
     @Override
     public String getReturnType() {
         return typeName;
+    }
+
+    public Class<T> getClazz() {
+        return clazz;
     }
 }

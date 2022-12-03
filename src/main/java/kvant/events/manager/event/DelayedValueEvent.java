@@ -2,6 +2,7 @@ package kvant.events.manager.event;
 
 import kvant.events.event.ValueEvent;
 import kvant.events.event.VoidEvent;
+import kvant.events.manager.impl.EventManager;
 import kvant.events.model.EventResult;
 import kvant.events.model.ValueList;
 
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
  * Can be processed by declaring EventHandler method in your listener class with
  * DelayedValueEvent as an argument
  *
- * @see kvant.events.manager.EventManager
+ * @see EventManager
  * @see ValueEvent
  */
 

@@ -2,12 +2,13 @@ package kvant.events.manager.event;
 
 import kvant.events.event.Event;
 import kvant.events.event.VoidEvent;
+import kvant.events.manager.impl.EventManager;
 
 /**
  * Event fired by EventManager when calling event was unsuccessful.
  * NOTE: Called only when EventManager configured on not throwing on error.
  *
- * @see kvant.events.manager.EventManager
+ * @see EventManager
  */
 public class EventErrorEvent extends VoidEvent {
     private final Event event;

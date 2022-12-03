@@ -18,22 +18,26 @@ public class AsyncTicker implements Ticker {
     private long stepMillis = 100L;
     private long startDelay = 0L;
 
+    @Override
     public AsyncTicker until(Supplier<Boolean> until) {
         this.until = until;
         return this;
     }
 
-    public AsyncTicker withStep(long step) {
+    @Override
+    public AsyncTicker step(long step) {
         this.stepMillis = step;
         return this;
     }
 
-    public AsyncTicker withStartDelay(long delay) {
+    @Override
+    public AsyncTicker startDelay(long delay) {
         this.startDelay = delay;
         return this;
     }
 
-    public AsyncTicker setExecutor(ExecutorService executor) {
+    @Override
+    public AsyncTicker executor(ExecutorService executor) {
         this.executor = executor;
         return this;
     }
