@@ -35,7 +35,7 @@ public class DelayedValueEvent extends VoidEvent {
         return values;
     }
 
-    public <T> ValueList<T> forClass(Class<T> clazz) {
+    public <T> ValueList<T> getValueList(Class<T> clazz) {
         return new ValueList<>(values.stream().map(e -> {
             if (e.hasException()) {
                 return new EventResult<>(clazz.cast(null), e.getException());

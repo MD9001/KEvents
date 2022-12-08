@@ -1,6 +1,6 @@
 package kvant.events.manager.impl;
 
-import kvant.events.annotation.EventHandler;
+import kvant.events.handler.annotation.EventHandler;
 import kvant.events.event.Event;
 import kvant.events.event.ValueEvent;
 import kvant.events.event.VoidEvent;
@@ -18,7 +18,6 @@ import java.io.Closeable;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -35,8 +34,8 @@ import java.util.stream.Collectors;
  * by callig registerListener(s) function.
  * ANY event can be fired, but only ValueEvent can be called.
  * 
- * @see EventManager#fire(Event, Object...)
- * @see EventManager#call(ValueEvent, Object...)
+ * @see EventDispatcher#fire(Event, Object...)
+ * @see EventDispatcher#call(ValueEvent, Object...)
  */
 
 public class EventManager implements EventDispatcher, Closeable {
@@ -56,7 +55,7 @@ public class EventManager implements EventDispatcher, Closeable {
     }
 
     @Override
-    public List<Handler> getHandlers(Event event, Object... args) {
+    public TreeSet<Handler> getHandlers(Event event, Object... args) {
         var eventMethods = cache.get(event);
 
         if (eventMethods == null)
@@ -67,19 +66,16 @@ public class EventManager implements EventDispatcher, Closeable {
 
         System.arraycopy(args, 0, arguments, 1, args.length);
 
-        var handlers = new ArrayList<Handler>();
+        var handlers = new TreeSet<Handler>();
 
-        for (Entry<Listener, List<Method>> methodEntry : eventMethods.entrySet()) {
-            var methods = methodEntry.getValue();
-
+        eventMethods.forEach(((listener, methods) -> {
             var applicableMethods = methods.stream()
-                    .filter(m -> isApplicable(m, arguments))
-                    .filter(m -> m.getReturnType().getTypeName().equals(event.getReturnType()))
-                    .map(m -> new MethodHandler(methodEntry.getKey(), m, arguments))
+                    .filter(method -> isApplicable(method, event, arguments))
+                    .map(method -> createMethodHandler(listener, method, arguments))
                     .collect(Collectors.toList());
 
             handlers.addAll(applicableMethods);
-        }
+        }));
 
         return handlers;
     }
@@ -101,6 +97,15 @@ public class EventManager implements EventDispatcher, Closeable {
         listeners.add(listener);
     }
 
+    @Override
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+    public void removeListeners() {
+        listeners.clear();
+    }
+
     public void registerListeners(List<Listener> listeners) {
         this.listeners.addAll(listeners);
     }
@@ -110,13 +115,7 @@ public class EventManager implements EventDispatcher, Closeable {
 
         for (Listener listener : listeners) {
             var classMethods = Arrays.stream(listener.getClass().getDeclaredMethods())
-                    .filter(m -> m.isAnnotationPresent(EventHandler.class))
-                    .filter(m -> {
-                        var typeParams = m.getParameterTypes();
-
-                        return typeParams.length != 0 && typeParams[0].getTypeName()
-                                .equals(event.typeName());
-                    })
+                    .filter(m -> isEventHandler(m, event))
                     .peek(m -> m.setAccessible(true))
                     .collect(Collectors.toList());
 
@@ -128,26 +127,40 @@ public class EventManager implements EventDispatcher, Closeable {
         return methods;
     }
 
-    private boolean isApplicable(Method method, Object[] args) {
+    private boolean isApplicable(Method method, Event event, Object[] args) {
         var typeParams = method.getParameterTypes();
 
         if (typeParams.length != args.length) return false;
-
-        var typesValid = true;
 
         for (int i = 0; i < args.length; i++) {
             var typeParam = typeParams[i].getTypeName();
             var argType = args[i].getClass().getTypeName();
 
             if (!typeParam.equals(argType)) {
-                typesValid = false;
-                break;
+                return false;
             }
         }
 
-        return typesValid;
+        var returnType = method.getReturnType().getTypeName();
+
+        return returnType.equals(event.getReturnTypeName());
     }
 
+    private boolean isEventHandler(Method method, Event event) {
+        if (!method.isAnnotationPresent(EventHandler.class)) return false;
+
+        var typeParams = method.getParameterTypes();
+
+        return typeParams.length != 0 && typeParams[0].getTypeName()
+                .equals(event.typeName());
+    }
+
+    private Handler createMethodHandler(Listener listener, Method method, Object[] args) {
+        var annotation = method.getAnnotation(EventHandler.class);
+
+        return new MethodHandler(annotation.priority(), annotation.ignoreCancelled(),
+                listener, method, args);
+    }
     public void handleTicker() {
         Runnable task = () -> scheduledEvents.forEach((event, data) -> {
             if (Instant.now().compareTo(data.getFireTime()) < 0) return;
@@ -184,6 +197,7 @@ public class EventManager implements EventDispatcher, Closeable {
 
     @Override
     public void close() {
+        listeners.clear();
         executor.shutdown();
     }
 }

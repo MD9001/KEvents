@@ -5,7 +5,7 @@ package kvant.events.event;
  * @param <T> - Type of object should be returned
  */
 
-public abstract class ValueEvent<T> implements Event {
+public abstract class ValueEvent<T> extends Event {
     private final Class<T> clazz;
     private final String typeName;
 
@@ -15,7 +15,7 @@ public abstract class ValueEvent<T> implements Event {
     }
 
     @Override
-    public String getReturnType() {
+    public String getReturnTypeName() {
         return typeName;
     }
 

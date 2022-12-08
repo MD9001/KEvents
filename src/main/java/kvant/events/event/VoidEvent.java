@@ -5,9 +5,14 @@ package kvant.events.event;
  * If you need to return value from calling event,
  * @see ValueEvent
  */
-public abstract class VoidEvent implements Event {
+public abstract class VoidEvent extends Event {
     @Override
-    public String getReturnType() {
+    public String getReturnTypeName() {
         return "void";
+    }
+
+    @Override
+    public void setCancelled(boolean cancel) {
+        cancelled.set(cancel);
     }
 }
