@@ -1,15 +1,15 @@
-package kvant.events.handler.priority;
+package kvant.events.event;
 
 /**
  * Event priority
- * Lower value means higher priority
+ * Higher value - higher priority
  */
 public enum EventPriority {
-    HIGHEST(0),
-    HIGH(1),
-    NORMAL(2),
+    LOWEST(4),
     LOW(3),
-    LOWEST(4);
+    NORMAL(2),
+    HIGH(1),
+    HIGHEST(0);
 
     private final int value;
 

@@ -1,10 +1,9 @@
 package kvant.events.handler;
 
-import kvant.events.handler.priority.EventPriority;
-import kvant.events.model.EventResult;
+import kvant.events.event.EventPriority;
+import kvant.events.model.WrappedMethod;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 /**
  * Wrapper object for basic Java Methods for further invoking.
@@ -15,10 +14,10 @@ public class MethodHandler implements Handler {
     private final boolean ignoreCancelled;
 
     private final Object target;
-    private final Method method;
+    private final WrappedMethod method;
     private final Object[] args;
 
-    public MethodHandler(EventPriority priority, boolean ignoreCancelled, Object target, Method method, Object[] args) {
+    public MethodHandler(EventPriority priority, boolean ignoreCancelled, Object target, WrappedMethod method, Object[] args) {
         this.priority = priority;
         this.ignoreCancelled = ignoreCancelled;
         this.target = target;
@@ -27,19 +26,8 @@ public class MethodHandler implements Handler {
     }
 
     @Override
-    public void execute() throws InvocationTargetException, IllegalAccessException {
-        method.invoke(target, args);
-    }
-
-    @Override
-    public EventResult<?> executeForValue() {
-        try {
-            var value = method.invoke(target, args);
-
-            return new EventResult<>(value, null);
-        } catch (Exception e) {
-            return new EventResult<>(null, e);
-        }
+    public Object execute() throws InvocationTargetException, IllegalAccessException {
+        return method.invoke(target, args);
     }
 
     @Override

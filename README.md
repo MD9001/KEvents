@@ -1,16 +1,12 @@
 # KEvents
-Simple yet powerful library to implement Event-Driven logic in your project.
+Simple yet powerful Java Events library to implement Event-Driven logic in your project.
 
 # Creating first event
-By default, events are separated in 2 types: VoidEvent and ValueEvent.
-
-The difference between this events, is that the second one (ValueEvent) can
-return value after call.
-
-Let's create the first VoidEvent, containig any your message in constructor.
+To make event class, simple annotate your class as Event
 
 ```java
-public class YourEvent extends VoidEvent {
+@Event
+public class YourEvent {
      private final String message;
      
      public YourEvent(String message) {
@@ -20,19 +16,17 @@ public class YourEvent extends VoidEvent {
      public String getMessage() {
          return message;
      }
-     
-     @Override
-     public String name() {
-         return "YourEventName" //By default name() returns simple class name of your class.
-     }
 }
 ```
 
 Now let's create listener, where we will handle our event:
 Sure, you can handle more than 1 event in one listener.
 
+To make Listener class simply annotate it as listener.
+
 ```java
-public class YourListener implements Listener {
+@Listener
+public class YourListener {
      @EventHandler
      public void onYourEvent(YourEvent e) {
          System.out.println(e.getMessage());
@@ -45,75 +39,141 @@ After you have created your event, let's create EventManager instance;
 ```java
 public static void main(String[] args) {
     EventManager eventManager = new EventManager();
-    eventManager.setThrowOnFail(false); //Set's if event manager should throw exception on event fire error.
     eventManager.registerListener(new YourListener()); //Registers your listener class
     
     YourEvent event = new YourEvent("Message");
     
-    eventManager.fire(event); // prints "Message", as specified in Listener.
+    eventManager.call(event); // prints "Message", as specified in Listener.
     
     eventManager.close();
 }
 ```
-# Value Events
-To create an event, calling which you should get a value we should extend ValueEvent class.
+If you have more arguments in the function, simply add them to call method of event manager.
 ```java
-public class YourValueEvent extends ValueEvent<String> {
-    public YourValueEvent() {
-        super(String.class); // return value of your event handler method
+@EventHandler
+public void onYourEvent(YourEvent e, int yourArg1, String yourArg2) {
+    //do smth
+}
+```
+```java
+eventManager.call(new YourEvent(), 5, "Yet another arg")
+```
+# Typed Events
+To create an event, calling which you should get a value, specify return value class in @Event annotation.
+Note that if the return type you define has a primitive alternative, the primitive
+return type in the function should be used (like if you specify Integer.class, create method with <b>int</b> return type)
+The same works with Void type (if you specify Void.class explicitly, use <b>void</b> return type)
+```java
+@Event(typeNames = String.class)
+public class SomeEvent {
+    
+}
+```
+Great example:
+```java
+@Event(typeNames = String.class)
+class SomeEvent {}
+
+@Listener
+class SampleListener {
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public String onSomeEvent(SomeEvent e) {
+        return "Hello";
+    }
+
+    @EventHandler
+    public String onAnotherSample(SomeEvent e) {
+        return "World";
+    }
+    
+    public class SampleEventCall {
+        public static void main(String[] args) {
+            try (var manager = new EventManager()) {
+                manager.registerListener(new SampleListener());
+
+                CallResult result = manager.call(new SomeEvent());
+                List<String> values = result.getValues(String.class); // Get value list with type of String
+                
+                String message = String.join(" ", result.getValues(String.class));
+
+                System.out.println(message); //Hello world
+            }
+        }
     }
 }
 ```
-Then mention in listener:
+Here we specified 2 event handlers with return values.
+To specify the right order of execution, simply pass EventPriority
+to annotation arguments.
+
+In case you have only one typed event handler you can simply call CallResult#first(Class) method;
 ```java
-@EventHandler
-public String onYourValueEvent(YourValueEvent e) {
-    return "Hello world"
-}
+CallResult result = eventManager.call(new SampleEvent());
+String stringValue = result.first(String.class);
 ```
-To call value event you can use
+# Multi-Typed events
+You can specify more than 1 return type to event.
+To specify multiple event types pass an array of type classes to your event annotation.
 ```java
-ValueList<String> values = manager.call(new YourValueEvent()); // returns ValueList, cause you may have more than 1 handler method for your event.
+@Event(typeNames = {String.class, Integer.class})
+public class YourEvent {}
 ```
-As we have only one handler method, you can get first return value of your method by calling
+Then to get values of specific type simply call getValues method for list of values or first method for the first result.
+For instance, to get integers:
 ```java
-String s = values.single() //EventResult<String>. Here you can check for exception by calling .hasException();
-    .getValue(); //String
-    
-//s == "Hello world", as specified in return of onYourValueEvent method;
+CallResult#getValues(Integer.class) //All Integer values
+CallResult#first(String.class) //First String value
 ```
 # Scheduling events
 Events can be scheduled by calling schedule method of EventManager object.
 ```java
-eventManager.schedule(new YourEvent(), 1000L); //1000L =  delay 1000 ms before firing event
-eventManager.schedule(new YourEvent(), Instant.now().plusMillis(1000L)); // Or specify concrete time.
+CompletableFuture<CallResult> result = eventManager.schedule(new YourEvent(), 1000L); //1000L =  delay 1000 ms before firing event
 ```
-If you schedule a ValueEvent, then you can get it's value by handling DelayedValueEvent in your listener
+
+# Cancelling events
+Simply implement Cancellable interface to your event and furthermore call setCancelled(true/false)
+method;
+
 ```java
-@EventHandler
-public void onValueReceived(DelayedValueEvent e) {
-    if (e.getEvent().name().equals("YourValueEvent") {
-        ValueList<String> values = e.forClass(String.class); // Get value list of String type.
-        
-        String value = values.single().getValue(); //gets first value from function. If you have multiple handler function for 1 event, use getValues();
-        System.out.println(value); //prints "Hello world" as returned in onYourValueEvent;
+@Event
+public class YourEvent implements Cancellable {
+    private boolean cancelled = false;
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = true;
     }
 }
 ```
-To enable event scheduling, you should call handleTicker() method of EventManager.
 ```java
-eventManager.handleTicker();
+@Listener
+public class YourListener {
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onYourEvent(YourEvent e) {
+        System.out.println("Cancelling event");
+        e.setCancelled(true);
+    }
+    
+    @EventHandler
+    public void onSameYourEvent(YourEvent e) {
+        System.out.println("Will not be printed");
+    }
+}
 ```
-
-Some basic answers to basic questions:
-
-1. Yes, you can create multiple listeners classes and register them.
-2. You can pass more arguments to @EventHandler functions.
-3. No, (at least now) you can't have several return types for 1 ValueEvent.
-
-
+If you need specific method to be executed even after the event was cancelled,
+specify ignoreCancelled argument in EventHandler annotation.
+```java
+    @EventHandler(ignoreCancelled = true)
+    public void onSameYourEvent(YourEvent e) {
+        System.out.println("Now will be printed");
+    }
 ```
-TODO:
-Add project to maven repository.
-Refactor ValueEvent scheduling in EventManager.
-```
+# TODO:
+1. Add project to maven repository.
+2. Create detailed examples.

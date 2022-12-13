@@ -1,64 +1,62 @@
 package kvant.events.manager;
 
-import kvant.events.event.Event;
-import kvant.events.event.ValueEvent;
-import kvant.events.exception.EventFireException;
+import kvant.events.event.EventObject;
+import kvant.events.event.EventResult;
 import kvant.events.handler.Handler;
-import kvant.events.listener.Listener;
-import kvant.events.manager.event.EventErrorEvent;
-import kvant.events.model.EventResult;
-import kvant.events.model.ValueList;
+import kvant.events.model.CallResult;
 
-import java.time.Instant;
+import java.io.Closeable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
-public interface EventDispatcher {
-    boolean throwOnFail();
+public interface EventDispatcher extends Closeable {
+    void registerListener(Object listener);
 
-    void registerListener(Listener listener);
+    void removeListener(Object listener);
 
-    void removeListener(Listener listener);
+    Collection<Handler> getHandlers(EventObject event, Object... args);
 
-    void scheduleEvent(Event event, Instant time, Object... args);
+    default CallResult call(Object event, Object... args) {
+        var eventObject = new EventObject(event);
 
-    Collection<Handler> getHandlers(Event event, Object... args);
+        var results = new ArrayList<EventResult>();
 
-    default void scheduleEvent(Event event, long delay, Object... args) {
-        var callTime = Instant.now().plusMillis(delay);
-
-        scheduleEvent(event, callTime, args);
-    }
-
-    default void fire(Event event, Object... args) {
-        for (Handler handler : getHandlers(event, args)) {
-            if (event.isCancelled() && !handler.ignoreCancelled()) {
+        for (Handler handler : getHandlers(eventObject, args)) {
+            if (eventObject.isCancelled() && !handler.ignoreCancelled()) {
                 continue;
             }
+
+            EventResult result;
 
             try {
-                handler.execute();
+                result = new EventResult(eventObject, handler.execute());
             } catch (Exception e) {
-                if (throwOnFail())
-                    throw new EventFireException(e);
-                else
-                    fire(new EventErrorEvent(event, e));
+                result = new EventResult(eventObject, e);
             }
+
+            results.add(result);
         }
+
+        return new CallResult(eventObject, results);
     }
 
-    default <T> ValueList<T> call(ValueEvent<T> event, Object... args) {
-        var values = new ValueList<T>();
+    default CompletableFuture<CallResult> callAsync(Object event, Object... args) {
+        return CompletableFuture.supplyAsync(() -> call(event, args), getExecutor());
+    }
 
-        for (Handler handler : getHandlers(event, args)) {
-            if (event.isCancelled() && !handler.ignoreCancelled()) {
-                continue;
-            }
+    default CompletableFuture<CallResult> scheduleEvent(Object event, long delay, Object... args) {
+        var delayedExec = CompletableFuture.delayedExecutor(delay, TimeUnit.MILLISECONDS, getExecutor());
 
-            var value = (EventResult<T>) handler.executeForValue();
+        return CompletableFuture.supplyAsync(() -> call(event, args), delayedExec);
+    }
 
-            values.add(value);
-        }
+    ExecutorService getExecutor();
 
-        return values;
+    @Override
+    default void close() {
+        getExecutor().shutdown();
     }
 }

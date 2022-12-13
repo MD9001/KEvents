@@ -1,6 +1,6 @@
-package kvant.events.handler.annotation;
+package kvant.events.annotations;
 
-import kvant.events.handler.priority.EventPriority;
+import kvant.events.event.EventPriority;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
