@@ -20,8 +20,8 @@ import java.util.concurrent.Executors;
  */
 
 public class EventManager implements EventDispatcher {
-    private ExecutorService executor = Executors.newCachedThreadPool();
-    private final List<EventListener> listeners = new ArrayList<>();
+    protected ExecutorService executor = Executors.newCachedThreadPool();
+    protected final List<EventListener> listeners = new ArrayList<>();
 
     @Override
     public List<Handler> getHandlers(EventObject event, Object... args) {

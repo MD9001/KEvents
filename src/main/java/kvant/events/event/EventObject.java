@@ -8,11 +8,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class EventObject {
-    private final Object object;
-    private boolean cancelled = false;
+    protected final Object object;
+    protected boolean cancelled = false;
 
-    private final String eventName;
-    private final Set<String> typeNames;
+    protected final String eventName;
+    protected final Set<String> typeNames;
 
     public EventObject(Object object) {
         this.object = object;

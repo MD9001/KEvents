@@ -10,12 +10,12 @@ import java.util.Arrays;
  * Wrapper class for Method for not recalculating unneeded things every time.
  */
 public class WrappedMethod {
-    private final Method method;
+    protected final Method method;
 
-    private final String[] typeParams;
-    private final String returnType;
+    protected final String[] typeParams;
+    protected final String returnType;
 
-    private final EventHandler annotation;
+    protected final EventHandler annotation;
 
     public WrappedMethod(Method method) {
         this.method = method;
@@ -29,6 +29,10 @@ public class WrappedMethod {
 
     public Object invoke(Object target, Object... args) throws InvocationTargetException, IllegalAccessException {
         return method.invoke(target, args);
+    }
+
+    public Method getMethod() {
+        return method;
     }
 
     public String[] getTypeParams() {

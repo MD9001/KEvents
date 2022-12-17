@@ -11,8 +11,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class EventListener {
-    private final Object listener;
-    private final String name;
+    protected final Object listener;
+    protected final String name;
 
     private final Map<String, WrappedMethod[]> eventHandlers = new HashMap<>();
 

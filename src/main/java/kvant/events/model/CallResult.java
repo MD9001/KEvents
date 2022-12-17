@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CallResult {
-    private final EventObject eventObject;
-    private final List<EventResult> values;
+    protected final EventObject eventObject;
+    protected final List<EventResult> values;
 
     public CallResult(EventObject eventObject, List<EventResult> values) {
         this.eventObject = eventObject;

@@ -3,10 +3,10 @@ package kvant.events.event;
 import java.util.Objects;
 
 public class EventResult {
-    private final EventObject event;
+    protected final EventObject event;
 
-    private Object value = null;
-    private Exception exception = null;
+    protected Object value = null;
+    protected Exception exception = null;
 
     public EventResult(EventObject event) {
         Objects.requireNonNull(event);
