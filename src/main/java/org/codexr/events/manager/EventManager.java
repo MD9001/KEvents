@@ -1,9 +1,11 @@
-package kvant.events.manager;
+package org.codexr.events.manager;
 
-import kvant.events.event.EventListener;
-import kvant.events.event.EventObject;
-import kvant.events.handler.Handler;
-import kvant.events.model.CallResult;
+import org.codexr.events.event.EventListener;
+import org.codexr.events.event.EventObject;
+import org.codexr.events.handler.Handler;
+import org.codexr.events.marker.Event;
+import org.codexr.events.marker.Listener;
+import org.codexr.events.model.CallResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,18 +17,18 @@ import java.util.concurrent.Executors;
  * Class for calling and scheduling events.
  * After you created the listeners, you should register them
  * by calling registerListener(s) function.
- * 
- * @see EventDispatcher#call(Object, Object...)
+ *
+ * @see EventDispatcher#call(Event, Object...)
  */
 
 public class EventManager implements EventDispatcher {
-    protected ExecutorService executor = Executors.newCachedThreadPool();
     protected final List<EventListener> listeners = new ArrayList<>();
+    protected ExecutorService executor = Executors.newCachedThreadPool();
 
     @Override
     public List<Handler> getHandlers(EventObject event, Object... args) {
         var arguments = new Object[args.length + 1];
-        arguments[0] = event.getObject();
+        arguments[0] = event.getEvent();
 
         System.arraycopy(args, 0, arguments, 1, args.length);
 
@@ -41,17 +43,22 @@ public class EventManager implements EventDispatcher {
         return handlers;
     }
 
-    public CompletableFuture<CallResult> callAsync(Object event, Object... args) {
+    public CompletableFuture<CallResult> callAsync(Event event, Object... args) {
         return CompletableFuture.supplyAsync(() -> call(event, args), executor);
     }
 
-    public void registerListener(Object listener) {
+    @Override
+    public void registerListener(Listener listener) {
+        if (listener == null)
+            return;
+
         listeners.add(new EventListener(listener));
     }
 
     @Override
-    public void removeListener(Object listener) {
-        if (listener == null) return;
+    public void removeListener(Listener listener) {
+        if (listener == null)
+            return;
 
         listeners.removeIf(e -> e.getName().equals(listener.getClass().getTypeName()));
     }
@@ -60,13 +67,13 @@ public class EventManager implements EventDispatcher {
         listeners.clear();
     }
 
-    public void setExecutor(ExecutorService executor) {
-        this.executor = executor;
-    }
-
     @Override
     public ExecutorService getExecutor() {
         return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
     }
 
     @Override

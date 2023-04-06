@@ -1,6 +1,6 @@
-package kvant.events.enums;
+package org.codexr.events.enums;
 
-public enum TypeName {
+public enum PrimitiveTypes {
     VOID(Void.class.getTypeName(), "void"),
     INTEGER(Integer.class.getTypeName(), "int"),
     LONG(Long.class.getTypeName(), "long"),
@@ -13,9 +13,21 @@ public enum TypeName {
 
     private final String classTypeName, alt;
 
-    TypeName(String classTypeName, String alt) {
+    PrimitiveTypes(String classTypeName, String alt) {
         this.classTypeName = classTypeName;
         this.alt = alt;
+    }
+
+    public static String getTypeName(Class<?> clazz) {
+        var values = values();
+        var classTypeName = clazz.getTypeName();
+
+        for (PrimitiveTypes name : values) {
+            if (name.classTypeName.equals(classTypeName))
+                return name.alt;
+        }
+
+        return classTypeName;
     }
 
     public String getClassTypeName() {
@@ -24,17 +36,5 @@ public enum TypeName {
 
     public String getAlt() {
         return alt;
-    }
-
-    public static String getTypeName(Class<?> clazz) {
-        var values = values();
-        var classTypeName = clazz.getTypeName();
-
-        for (TypeName name : values) {
-            if (name.classTypeName.equals(classTypeName))
-                return name.alt;
-        }
-
-        return classTypeName;
     }
 }

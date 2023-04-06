@@ -5,8 +5,7 @@ Simple yet powerful Java Events library to implement Event-Driven logic in your 
 To make event class, simple annotate your class as Event
 
 ```java
-@Event
-public class YourEvent {
+public class YourEvent implements Event {
      private final String message;
      
      public YourEvent(String message) {
@@ -25,8 +24,7 @@ Sure, you can handle more than 1 event in one listener.
 To make Listener class simply annotate it as listener.
 
 ```java
-@Listener
-public class YourListener {
+public class YourListener implements Listener {
      @EventHandler
      public void onYourEvent(YourEvent e) {
          System.out.println(e.getMessage());
@@ -64,18 +62,17 @@ Note that if the return type you define has a primitive alternative, the primiti
 return type in the function should be used (like if you specify Integer.class, create method with <b>int</b> return type)
 The same works with Void type (if you specify Void.class explicitly, use <b>void</b> return type)
 ```java
-@Event(typeNames = String.class)
-public class SomeEvent {
+@TypeNames(String.class)
+public class SomeEvent implements Event {
     
 }
 ```
 Great example:
 ```java
-@Event(typeNames = String.class)
+@TypeNames(String.class)
 class SomeEvent {}
 
-@Listener
-class SampleListener {
+class SampleListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public String onSomeEvent(SomeEvent e) {
@@ -116,8 +113,8 @@ String stringValue = result.first(String.class);
 You can specify more than 1 return type to event.
 To specify multiple event types pass an array of type classes to your event annotation.
 ```java
-@Event(typeNames = {String.class, Integer.class})
-public class YourEvent {}
+@TypeNames(typeNames = {String.class, Integer.class})
+public class YourEvent implements Event {}
 ```
 Then to get values of specific type simply call getValues method for list of values or first method for the first result.
 For instance, to get integers:
@@ -136,8 +133,7 @@ Simply implement Cancellable interface to your event and furthermore call setCan
 method;
 
 ```java
-@Event
-public class YourEvent implements Cancellable {
+public class YourEvent implements Event, Cancellable {
     private boolean cancelled = false;
 
     @Override
@@ -152,8 +148,7 @@ public class YourEvent implements Cancellable {
 }
 ```
 ```java
-@Listener
-public class YourListener {
+public class YourListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onYourEvent(YourEvent e) {
         System.out.println("Cancelling event");

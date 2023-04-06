@@ -1,4 +1,4 @@
-package kvant.events.event;
+package org.codexr.events.event;
 
 /**
  * Event priority

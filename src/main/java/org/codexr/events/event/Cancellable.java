@@ -1,4 +1,4 @@
-package kvant.events.event;
+package org.codexr.events.event;
 
 /**
  * Specifies if your event is cancellable or not.

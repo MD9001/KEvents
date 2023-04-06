@@ -1,6 +1,6 @@
-package kvant.events.model;
+package org.codexr.events.model;
 
-import kvant.events.annotations.EventHandler;
+import org.codexr.events.annotations.EventHandler;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

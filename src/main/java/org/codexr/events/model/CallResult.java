@@ -1,7 +1,7 @@
-package kvant.events.model;
+package org.codexr.events.model;
 
-import kvant.events.event.EventObject;
-import kvant.events.event.EventResult;
+import org.codexr.events.event.EventObject;
+import org.codexr.events.event.EventResult;
 
 import java.util.ArrayList;
 import java.util.List;

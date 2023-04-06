@@ -1,6 +1,6 @@
-package kvant.events.annotations;
+package org.codexr.events.annotations;
 
-import kvant.events.event.EventPriority;
+import org.codexr.events.event.EventPriority;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

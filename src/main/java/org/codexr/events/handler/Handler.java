@@ -1,6 +1,6 @@
-package kvant.events.handler;
+package org.codexr.events.handler;
 
-import kvant.events.event.EventPriority;
+import org.codexr.events.event.EventPriority;
 
 public interface Handler extends Comparable<Handler> {
     Object execute() throws Exception;

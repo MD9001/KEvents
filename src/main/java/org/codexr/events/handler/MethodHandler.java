@@ -1,8 +1,8 @@
-package kvant.events.handler;
+package org.codexr.events.handler;
 
-import kvant.events.event.EventPriority;
+import org.codexr.events.event.EventPriority;
+import org.codexr.events.model.WrappedMethod;
 
-import kvant.events.model.WrappedMethod;
 import java.lang.reflect.InvocationTargetException;
 
 /**

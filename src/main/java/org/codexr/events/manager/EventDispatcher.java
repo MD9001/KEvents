@@ -1,9 +1,11 @@
-package kvant.events.manager;
+package org.codexr.events.manager;
 
-import kvant.events.event.EventObject;
-import kvant.events.event.EventResult;
-import kvant.events.handler.Handler;
-import kvant.events.model.CallResult;
+import org.codexr.events.event.EventObject;
+import org.codexr.events.event.EventResult;
+import org.codexr.events.handler.Handler;
+import org.codexr.events.marker.Event;
+import org.codexr.events.marker.Listener;
+import org.codexr.events.model.CallResult;
 
 import java.io.Closeable;
 import java.util.ArrayList;
@@ -13,13 +15,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public interface EventDispatcher extends Closeable {
-    void registerListener(Object listener);
+    void registerListener(Listener listener);
 
-    void removeListener(Object listener);
+    void removeListener(Listener listener);
 
     Collection<Handler> getHandlers(EventObject event, Object... args);
 
-    default CallResult call(Object event, Object... args) {
+    default CallResult call(Event event, Object... args) {
         var eventObject = new EventObject(event);
 
         var results = new ArrayList<EventResult>();
@@ -43,11 +45,11 @@ public interface EventDispatcher extends Closeable {
         return new CallResult(eventObject, results);
     }
 
-    default CompletableFuture<CallResult> callAsync(Object event, Object... args) {
+    default CompletableFuture<CallResult> callAsync(Event event, Object... args) {
         return CompletableFuture.supplyAsync(() -> call(event, args), getExecutor());
     }
 
-    default CompletableFuture<CallResult> scheduleEvent(Object event, long delay, Object... args) {
+    default CompletableFuture<CallResult> scheduleEvent(Event event, long delay, Object... args) {
         var delayedExec = CompletableFuture.delayedExecutor(delay, TimeUnit.MILLISECONDS, getExecutor());
 
         return CompletableFuture.supplyAsync(() -> call(event, args), delayedExec);

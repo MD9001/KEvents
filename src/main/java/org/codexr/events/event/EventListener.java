@@ -1,36 +1,31 @@
-package kvant.events.event;
+package org.codexr.events.event;
 
-import kvant.events.annotations.EventHandler;
-import kvant.events.annotations.Listener;
-import kvant.events.handler.Handler;
-import kvant.events.handler.MethodHandler;
-import kvant.events.model.WrappedMethod;
+import org.codexr.events.annotations.EventHandler;
+import org.codexr.events.handler.Handler;
+import org.codexr.events.handler.MethodHandler;
+import org.codexr.events.marker.Listener;
+import org.codexr.events.model.WrappedMethod;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class EventListener {
-    protected final Object listener;
+    protected final Listener listener;
     protected final String name;
 
     private final Map<String, WrappedMethod[]> eventHandlers = new HashMap<>();
 
-    public EventListener(Object listener) {
+    public EventListener(Listener listener) {
         this.listener = listener;
         this.name = listener.getClass().getTypeName();
 
         var clazz = listener.getClass();
 
-        if (clazz.getAnnotation(Listener.class) == null) {
-            throw new IllegalArgumentException("Not Listener class");
-        }
-
         var methods = Arrays.stream(clazz.getDeclaredMethods())
                 .filter(this::isEventHandler)
                 .peek(m -> m.setAccessible(true))
                 .map(WrappedMethod::new)
-                .collect(Collectors.toList());
+                .toList();
 
         for (WrappedMethod method : methods) {
             var args = method.getTypeParams();
@@ -62,7 +57,7 @@ public class EventListener {
 
         if (typeParams.length != args.length) return false;
 
-       for (int i = 0; i < args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             var typeParam = typeParams[i];
             var argType = args[i].getClass().getTypeName();
 
